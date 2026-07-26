@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Report Register</title>
+    <!-- Bootstrap CSS for Mobile Responsiveness -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-light">
+    <div class="container mt-4">
+        <h2 class="mb-4 text-primary">Laboratory Register</h2>
+        
+        <!-- Search & Filter Controls -->
+        <div class="row mb-3">
+            <div class="col-md-6 mb-2">
+                <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search by Patient Name or ID...">
+            </div>
+            <div class="col-md-4 mb-2">
+                <select id="statusFilter" class="form-select">
+                    <option value="All">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Processed">Processed</option>
+                    <option value="Reported">Reported</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" onclick="showAddModal()">+ Add New</button>
+            </div>
+        </div>
+
+        <!-- UI States (Task 4) -->
+        <!-- 1. Loading State -->
+        <div id="loadingState" class="text-center my-5 d-none">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Loading records...</p>
+        </div>
+        
+        <!-- 2. Error State -->
+        <div id="errorState" class="alert alert-danger d-none my-3"></div>
+        
+        <!-- 3. Empty State -->
+        <div id="emptyState" class="text-center my-5 d-none">
+            <h4 class="text-muted">No records found</h4>
+            <p>Try adjusting your search or filter.</p>
+            <button class="btn btn-outline-secondary btn-sm mt-2" onclick="clearFilters()">Clear Filters</button>
+        </div>
+
+        <!-- Responsive Table (Main View) -->
+        <div id="dataContainer" class="table-responsive bg-white shadow-sm rounded mb-5">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Patient Name</th>
+                        <th>Test Type</th>
+                        <th>Collected Date</th>
+                        <th>Status</th>
+                        <th>Days Waiting</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data will be populated here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Update Form Modal (Task 3) -->
+    <div class="modal fade" id="sampleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Add New Sample</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Validation Error Message Box -->
+                    <div id="formError" class="alert alert-danger d-none"></div>
+                    
+                    <form id="sampleForm">
+                        <input type="hidden" id="isUpdate" value="false">
+                        
+                        <div class="mb-3">
+                            <label>Sample ID *</label>
+                            <input type="text" id="formId" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Patient Name *</label>
+                            <input type="text" id="formName" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Test Type *</label>
+                            <input type="text" id="formTest" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Collected Date *</label>
+                            <input type="date" id="formDate" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Status</label>
+                            <select id="formStatus" class="form-select">
+                                <option value="Pending">Pending</option>
+                                <option value="Processed">Processed</option>
+                                <option value="Reported">Reported</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Collected By</label>
+                            <input type="text" id="formTech" class="form-control">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveRecord()">Save Record</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (Modal work aaga idhu thevai) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Namma Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
