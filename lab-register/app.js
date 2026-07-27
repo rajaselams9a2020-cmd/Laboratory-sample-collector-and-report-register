@@ -1,7 +1,7 @@
 let allSamples = [];
 
-// 1. Fetch data from backend API (Task 4 - Loading & Error Handle pannirukkom)
-async function loadData() {
+// 1. Fetch data from backend API (Task 4 - Server-Side Search Add pannirukkom)
+async function loadData(searchQuery = '') {
     // Start aagumpodhu Loading kaattanum, Table & Errors hide pannanum
     document.getElementById('loadingState').classList.remove('d-none');
     document.getElementById('dataContainer').classList.add('d-none');
@@ -9,12 +9,19 @@ async function loadData() {
     document.getElementById('emptyState').classList.add('d-none');
 
     try {
-        const response = await fetch('/api/samples');
+        // Ippo Server-kku search word-ah URL vazhiya anuppurom!
+        const url = searchQuery ? `/api/samples?search=${encodeURIComponent(searchQuery)}` : '/api/samples';
+        const response = await fetch(url);
         
         if (!response.ok) throw new Error("Server connection failed. Could not load data.");
         
         allSamples = await response.json();
-        renderTable(allSamples);
+        
+        // Status filter mattum frontend-la irukkattum
+        const statusText = document.getElementById('statusFilter').value;
+        const filteredByStatus = allSamples.filter(sample => statusText === 'All' || sample.status === statusText);
+        
+        renderTable(filteredByStatus);
         
     } catch (error) {
         // Error vandha Loading-ah hide pannittu Error box-ah kaattanum
@@ -63,6 +70,7 @@ function renderTable(data) {
         tr.innerHTML = `
             <td class="fw-bold">${sample.sample_id}</td>
             <td>${patientName}</td>
+            <td>${sample.phone_number || '-'}</td>
             <td>${sample.test_type}</td>
             <td>${sample.collected_date}</td>
             <td><span class="badge ${statusBadgeClass}">${sample.status}</span></td>
@@ -77,18 +85,9 @@ function renderTable(data) {
 
 // 3. Search & Filter Logic
 function applyFilters() {
-    const searchText = document.getElementById('searchInput').value.toLowerCase();
-    const statusText = document.getElementById('statusFilter').value;
-
-    const filteredData = allSamples.filter(sample => {
-        const nameMatch = (sample.patient_name || "").toLowerCase().includes(searchText);
-        const idMatch = sample.sample_id.toLowerCase().includes(searchText);
-        const statusMatch = statusText === 'All' || sample.status === statusText;
-
-        return (nameMatch || idMatch) && statusMatch;
-    });
-
-    renderTable(filteredData);
+    const searchText = document.getElementById('searchInput').value;
+    // Pazhaiya madhiri array-la thedama, direct-ah server-kitteye theda sollurom
+    loadData(searchText);
 }
 
 // Clear Filters (Empty state button click panna)
@@ -130,6 +129,7 @@ function showUpdateModal(id) {
     document.getElementById('formId').value = sample.sample_id;
     document.getElementById('formId').readOnly = true; 
     document.getElementById('formName').value = sample.patient_name;
+    document.getElementById('formPhone').value = sample.phone_number || '';
     document.getElementById('formTest').value = sample.test_type;
     document.getElementById('formDate').value = sample.collected_date;
     document.getElementById('formStatus').value = sample.status;
@@ -149,6 +149,7 @@ async function saveRecord() {
     const data = {
         sample_id: id,
         patient_name: document.getElementById('formName').value,
+        phone_number: document.getElementById('formPhone').value,
         test_type: document.getElementById('formTest').value,
         collected_date: document.getElementById('formDate').value,
         status: document.getElementById('formStatus').value,
@@ -173,6 +174,8 @@ async function saveRecord() {
             errorBox.classList.remove('d-none');
         } else {
             myModal.hide();
+            // Pudhu record save aanadhum search input clear aagi reload aaganum
+            document.getElementById('searchInput').value = '';
             loadData(); 
         }
     } catch (error) {

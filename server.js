@@ -19,8 +19,22 @@ const db = new sqlite3.Database('./database.db', (err) => {
 });
 
 // 2. Data-va frontend-ku anuppa API Route (With 'Days Waiting' calculation)
+
 app.get('/api/samples', (req, res) => {
-    db.all("SELECT * FROM samples", [], (err, rows) => {
+    // 1. URL-la irundhu 'search' word-ah edukurom
+    const searchQuery = req.query.search; 
+    
+    let query = "SELECT * FROM samples";
+    let params = [];
+
+    // 2. Search word irundha, Database query-ah maathurom (Server-side filtering)
+    if (searchQuery) {
+        query += " WHERE patient_name LIKE ? OR sample_id LIKE ?";
+        // % pota thaan munnadi/pinadi endha ezhuthu irundhalum thedi edukkum
+        params.push('%' + searchQuery + '%', '%' + searchQuery + '%');
+    }
+
+    db.all(query, params, (err, rows) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
@@ -43,16 +57,19 @@ app.get('/api/samples', (req, res) => {
 });
 
 // 3. ADD New Record (POST)
+
 app.post('/api/samples', (req, res) => {
-    const { sample_id, patient_name, test_type, collected_date, status, collected_by } = req.body;
+    // Inga 'phone_number' add pannirukom
+    const { sample_id, patient_name, phone_number, test_type, collected_date, status, collected_by } = req.body;
     
     if (!sample_id || !patient_name || !test_type || !collected_date || !status) {
         return res.status(400).json({ error: "Missing required fields! ID, Name, Test, Date, and Status are mandatory." });
     }
 
-    const sql = `INSERT INTO samples (sample_id, patient_name, test_type, collected_date, status, collected_by) VALUES (?, ?, ?, ?, ?, ?)`;
+    // Insert query-la phone_number add pannirukom
+    const sql = `INSERT INTO samples (sample_id, patient_name, phone_number, test_type, collected_date, status, collected_by) VALUES (?, ?, ?, ?, ?, ?, ?)`;
                  
-    db.run(sql, [sample_id, patient_name, test_type, collected_date, status, collected_by], function(err) {
+    db.run(sql, [sample_id, patient_name, phone_number, test_type, collected_date, status, collected_by], function(err) {
         if (err) return res.status(400).json({ error: "Could not save. Sample ID might already exist!" });
         res.json({ message: "Record added successfully" });
     });
@@ -80,6 +97,7 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS samples (
         sample_id TEXT PRIMARY KEY,
         patient_name TEXT,
+        phone_number TEXT,
         test_type TEXT,
         collected_date TEXT,
         status TEXT,
@@ -94,7 +112,7 @@ db.serialize(() => {
         if (err) return console.error("❌ Error checking table data:", err.message);
 
         if (row.count === 0) {
-            const stmt = db.prepare("INSERT INTO samples VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            const stmt = db.prepare("INSERT INTO samples (sample_id, patient_name, test_type, collected_date, status, processed_date, report_issued_date, collected_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             
             const seedData = [
                 ['S001', 'Arun Kumar', 'Blood Sugar', '2026-07-24', 'Pending', null, null, 'Tech A'],
